@@ -63,19 +63,23 @@ fig.suptitle('k-means Clustering')
 
 # Step (3): settings
 #----------------------------------------------
-n_clusters_algorithm = 2 #how many clusters should the algorithm detect?
 n_samples = 350
 
 if(data_distribution_type == "type_gauss"):
-    cluster_std = 1.5
+    cluster_std = 1.2
     n_dimensions = 2  # for n=3 its harder to plot; you need mplot3d for example
-    n_clusters_real = 6
+    n_clusters_real = 5 # real amount of clusters
+    n_clusters_algorithm = 5  # how many clusters should the algorithm detect?
+
 
 elif(data_distribution_type == "type_crescent"):
     value_noise = 0.05
+    n_clusters_algorithm = 2  # how many clusters should the algorithm detect?
+
 
 elif(data_distribution_type == "type_circular"):
     value_noise = 0.05
+    n_clusters_algorithm = 2  # how many clusters should the algorithm detect?
 
 #else:
     #throw error...
@@ -87,7 +91,7 @@ if(data_distribution_type == "type_gauss"):
     X, y = make_blobs(n_samples=n_samples,
                            centers=n_clusters_real,
                            n_features=n_dimensions,
-                           #random_state=0,
+                           random_state=4, #seed no4 is a good example with this setting
                            cluster_std=cluster_std)
 
 elif(data_distribution_type == "type_crescent"):
@@ -98,7 +102,8 @@ elif(data_distribution_type == "type_crescent"):
 elif(data_distribution_type == "type_circular"):
     X, y = make_circles(n_samples=n_samples,
                            #random_state=0,
-                           noise=value_noise)
+                           noise=value_noise,
+                           factor=0.5)
 #else:
     #throw error...
 
@@ -126,5 +131,5 @@ ax2.scatter(centers[:, 0], centers[:, 1], c='black', alpha=0.5);
 
 # Step (8): Plot
 #----------------------------------------------
+plt.savefig('img.png', dpi=300)
 plt.show()
-#plt.savefig('img.png')
