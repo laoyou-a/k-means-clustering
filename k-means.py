@@ -57,7 +57,6 @@ def perform_calculations_method():
     # Step (2.1): Preparations
     #----------------------------------------------
     fig, (ax1, ax2) = plt.subplots(1, 2)
-    fig.suptitle('k-means Clustering')
 
     # Step (2.2): settings
     #----------------------------------------------
@@ -68,14 +67,18 @@ def perform_calculations_method():
         n_dimensions = 2  # for n=3 its harder to plot; you need mplot3d for example
         n_clusters_real = 5 # real amount of clusters
         n_clusters_algorithm = 5  # how many clusters should the algorithm detect?
+        data_type = "Gauß data"
 
     elif(data_distribution_type == "type_crescent"):
         value_noise = 0.05
         n_clusters_algorithm = 2  # how many clusters should the algorithm detect?
+        data_type = "crescent-shaped data"
 
     elif(data_distribution_type == "type_circular"):
         value_noise = 0.05
         n_clusters_algorithm = 2  # how many clusters should the algorithm detect?
+        data_type = "circle-shaped data"
+
     #see more types here: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.datasets
 
     #else:
@@ -107,10 +110,11 @@ def perform_calculations_method():
     #----------------------------------------------
     print(X.shape)
     ax1.scatter(X[:, 0], X[:, 1]) #2D data
+    ax1.set(xlabel='Attribute 1', ylabel='Attribute 2')
 
     # Step (2.5): Perform k-means algorithm
     #----------------------------------------------
-    kmeans = KMeans(n_clusters=n_clusters_algorithm)
+    kmeans = KMeans(n_clusters=n_clusters_algorithm, algorithm="auto") #according to Python doc: The k-means problem is solved using either Lloyd’s or Elkan’s algorithm.
     kmeans.fit(X)
     y_kmeans = kmeans.predict(X)
 
@@ -120,9 +124,13 @@ def perform_calculations_method():
     plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=50, cmap='viridis')
     centers = kmeans.cluster_centers_
     ax2.scatter(centers[:, 0], centers[:, 1], c='black', alpha=0.5);
+    ax2.set(xlabel='Attribute 1', ylabel='Attribute 2')
 
     # Step (2.7): Plot
     #----------------------------------------------
+    for ax in (ax1, ax2): # Hide x labels and tick labels for top plots and y ticks for right plots.
+        ax.label_outer()
+    fig.suptitle('k-means clustering with '+data_type)
     plt.savefig('img.png', dpi=300)
     plt.show()
 
@@ -131,7 +139,7 @@ def perform_calculations_method():
 # ----------------------------------------------
 while(mode_on == True):
 
-    Button_Start_Gauss = tk.Button(text='Gauss Data',
+    Button_Start_Gauss = tk.Button(text='Gauß Data',
                          bg='lawn green', fg='black',
                          height = 3, width = 5,
                          command=answ_gauss)
