@@ -10,15 +10,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()  # for plot styling
 import numpy as np
 import pandas as pd
+
 from sklearn.datasets import make_blobs #Gaussian data
 from sklearn.datasets import make_moons #crescent shape data with two crescents
 from sklearn.datasets import make_circles #circular data in 2D
 from sklearn.cluster import KMeans
+
 import random
 import sys
+
 import tkinter as tk #for dialogue
 from tkinter import messagebox as mb #for dialogue
 import tkinter.font as font
+
+from skimage.segmentation import slic #skimage for k-means for image
+from skimage.segmentation import mark_boundaries
+from skimage.util import img_as_float
+from skimage import io
 
 # Step (1): GUI settings
 #----------------------------------------------
@@ -34,6 +42,7 @@ def closeGUI(): #close GUI
         gui.destroy() #also possible:  #mb.showinfo("Mode chosen. Calculation will start.")
         global mode_on
         mode_on = False
+        plt.close('all') #close also all figure windows
 
 def answ_gauss(): #start k-means algorithm for gauss distribution
     global data_distribution_type
@@ -49,6 +58,11 @@ def answer_circular(): #start k-means algorithm for circular distribution
     global data_distribution_type
     data_distribution_type = "type_circular"
     perform_calculations_method()
+
+def answer_image():  # start k-means algorithm for an image
+    global data_distribution_type
+    data_distribution_type = "type_image"
+    perform_image_calculation_method()
 
 # Step (2): Defining the function for using the k-means algorithm
 # ----------------------------------------------
@@ -80,6 +94,13 @@ def perform_calculations_method():
         data_type = "circle-shaped data"
 
     #see more types here: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.datasets
+    #for circular, crescent etc better use DBSCAN etc.
+
+
+    elif(data_distribution_type == "type_image"):
+        value_noise = 0.05
+        #n_clusters_algorithm = 2  # how many clusters should the algorithm detect?
+        #data_type = "circle-shaped data"
 
     #else:
         #throw error...
@@ -115,8 +136,8 @@ def perform_calculations_method():
     # Step (2.5): Perform k-means algorithm
     #----------------------------------------------
     kmeans = KMeans(n_clusters=n_clusters_algorithm, algorithm="auto") #according to Python doc: The k-means problem is solved using either Lloyd’s or Elkan’s algorithm.
-    kmeans.fit(X)
-    y_kmeans = kmeans.predict(X)
+    kmeans.fit(X) #compute k-means clustering
+    y_kmeans = kmeans.predict(X) #compute cluster centers and predict cluster index for each sample
 
     # Step (2.6): Visualize clustered data
     #----------------------------------------------
@@ -131,11 +152,58 @@ def perform_calculations_method():
     for ax in (ax1, ax2): # Hide x labels and tick labels for top plots and y ticks for right plots.
         ax.label_outer()
     fig.suptitle('k-means clustering with '+data_type)
-    plt.savefig('img.png', dpi=300)
+    plt.savefig('clustering_' + data_distribution_type + '.png', dpi=300)
     plt.show()
 
 
-# Step (3): Loop all the stuff using GUI buttons
+
+# Step (3): Defining the function for using the k-means algorithm for images
+# ----------------------------------------------
+def perform_image_calculation_method():
+
+    # Step (3.1): Preparations
+    #----------------------------------------------
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+
+    # Step (3.2): settings
+    #----------------------------------------------
+    n_clusters_algorithm = 2  # how many clusters should the algorithm detect?; here 2: remove background and keep the foreground (temple)
+
+    # Step (3.3): Read sample image
+    #----------------------------------------------
+    image = img_as_float(io.imread('raohe_temple.jpg'))
+
+    # Step (3.4): Visualize original picture
+    #----------------------------------------------
+    ax1.imshow(image)
+    ax1.axis('off')
+
+    # Step (3.5): Perform k-means algorithm
+    #----------------------------------------------
+    # slic is k means clustering for images, see https://www.kite.com/python/docs/skimage.segmentation.slic
+    # sigma is for smoothing
+    # compactness: high value: focus on spatial distance; low value: focus on color proximity
+    segments = slic(image,
+                    n_segments=n_clusters_algorithm,
+                    sigma=1,
+                    compactness=0.05)
+
+    # Step (3.6): Visualize clustered image
+    #----------------------------------------------
+    ax2.imshow(mark_boundaries(image = image,
+                               label_img = segments,
+                               color = (0,255,127),
+                               outline_color = (240, 248, 255)
+                               ))
+    ax2.axis('off')
+
+    # Step (3.7): Plot
+    #----------------------------------------------
+    fig.suptitle('k-means clustering for image data with '+ str(n_clusters_algorithm) + ' clusters')
+    plt.savefig('clustering_image.png', dpi=300)
+    plt.show()
+
+# Step (4): Loop all the stuff using GUI buttons
 # ----------------------------------------------
 while(mode_on == True):
 
@@ -151,6 +219,10 @@ while(mode_on == True):
                          bg='lawn green', fg='black',
                          height = 3, width = 5,
                          command=answer_circular)
+    Button_Start_Image = tk.Button(text='Image Data',
+                         bg='gold', fg='black',
+                         height = 3, width = 5,
+                         command=answer_image)
     Button_Close = tk.Button(text='Terminate',
                          bg='firebrick1', fg='white',
                          height = 3, width = 5,
@@ -161,11 +233,13 @@ while(mode_on == True):
     Button_Start_Gauss['font'] = myFont
     Button_Start_Crescent['font'] = myFont
     Button_Start_Circular['font'] = myFont
+    Button_Start_Image['font'] = myFont
     Button_Close['font'] = myFont
 
     Button_Start_Gauss.pack(fill=tk.X)
     Button_Start_Crescent.pack(fill=tk.X)
     Button_Start_Circular.pack(fill=tk.X)
+    Button_Start_Image.pack(fill=tk.X)
     Button_Close.pack(fill=tk.X)
 
     gui.mainloop()
